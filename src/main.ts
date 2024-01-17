@@ -29,7 +29,29 @@ const elementInBox = (box: HTMLDivElement, event: PointerEvent): boolean => {
     return clientX > left && clientX < right && clientY > top && clientY < bottom;
 };
 
-createElementDiv.addEventListener('pointerdown', (event) => {
+const onPointerUpHandler = (event: PointerEvent, newElement: HTMLDivElement) => {
+    const elementWidth = newElement.offsetWidth;
+    const elementHeight = newElement.offsetHeight;
+    newElement.remove();
+
+    if (elementInBox(gridBox, event)) {
+        newElement.style.position = 'static';
+        gridBox.append(newElement);
+    } else if (elementInBox(freeBox, event)) {
+        console.log(newElement.offsetWidth);
+        setPositionToElement(
+            newElement,
+            event.pageX - freeBox.offsetLeft - elementWidth / 2,
+            event.pageY - freeBox.offsetTop - elementHeight / 2
+        );
+        freeBox.append(newElement);
+    }
+
+    document.onpointermove = null;
+    document.onpointerup = null;
+};
+
+const onPointerDownHandler = (event: PointerEvent) => {
     const newElement = document.createElement('div');
     newElement.classList.add('box-element');
     newElement.style.backgroundColor = getRandomRGBColor();
@@ -38,22 +60,7 @@ createElementDiv.addEventListener('pointerdown', (event) => {
 
     document.onpointermove = (event) => setPositionToCenterElement(newElement, event);
 
-    document.onpointerup = (event) => {
-        newElement.remove();
+    document.onpointerup = (event) => onPointerUpHandler(event, newElement);
+};
 
-        if (elementInBox(gridBox, event)) {
-            newElement.style.position = 'static';
-            gridBox.append(newElement);
-        } else if (elementInBox(freeBox, event)) {
-            setPositionToElement(
-                newElement,
-                event.pageX - freeBox.offsetLeft - newElement.offsetWidth / 2,
-                event.pageY - freeBox.offsetTop - newElement.offsetHeight / 2
-            );
-            freeBox.append(newElement);
-        }
-
-        document.onpointermove = null;
-        document.onpointerup = null;
-    };
-});
+createElementDiv.onpointerdown = (event) => onPointerDownHandler(event);
